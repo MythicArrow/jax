@@ -1417,15 +1417,9 @@ def scaled_dot_general(
   )
 
   return out
-  @jax.jit
-    def BentIdentity(x: ArrayLike) -> Array:
-      '''The Bent Identity function is a smooth, non-linear function that is a slight modification of the identity function.
-      It is defined as: (x^2 + 1 - 1) / 2 + x 
-      Args = x(input array)'''
-      return (x**x + 1 - 1) / 2 + x
-  @jax.jit
-    def Gaussian(x: ArrayLike) -> Array:
-      '''The Gaussian function is a bell-shaped curve often used in probabilistic models. It is defined as:
-      e^-x^2
-      Args = x(input array)'''
-      return jnp.e**-x**2
+@jax.jit
+def mish(x: ArrayLike) -> Array:
+  '''Mish is a self-regularized, non-monotonic activation function for neural networks. 
+  It has several advantages over other functions, including improved performance, reducing vanishing gradients, and also self-gating, which is important for self-adapting to the input and adjusting its output accordingly.
+  More info can be found on https://arxiv.org/vc/arxiv/papers/1908/1908.08681v1.pdf'''
+  return x * jnp.tanh(jax.nn.softplus(x))
