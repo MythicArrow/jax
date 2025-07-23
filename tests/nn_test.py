@@ -450,6 +450,53 @@ class NNFunctionsTest(jtu.JaxTestCase):
   @parameterized.parameters([float] + jtu.dtypes.floating)
   def testMishZero(self, dtype):
     self.assertEqual(dtype(0), nn.mish(dtype(0)))
+  @jax.test_util.skip_on_flag("jax_skip_slow_tests", True)
+  def testLishtGrad(self):
+        check_grads(lisht, (1e-8,), order=4,
+                    rtol=1e-2 if jax.test_util.test_device_matches(["tpu"]) else None)
+
+  def testLishtGradZero(self):
+        check_grads(lisht, (0.,), order=1,
+                    rtol=1e-2 if jax.test_util.test_device_matches(["tpu"]) else None)
+
+  def testLishtGradNegInf(self):
+        check_grads(lisht, (-float('inf'),), order=1,
+                    rtol=1e-2 if jax.test_util.test_device_matches(["tpu"]) else None)
+
+  def testLishtGradNan(self):
+        check_grads(lisht, (float('nan'),), order=1,
+                    rtol=1e-2 if jax.test_util.test_device_matches(["tpu"]) else None)
+
+  @parameterized.parameters([float] + jax.test_util.dtypes.floating) 
+  def testLishtZero(self, dtype):
+        self.assertEqual(dtype(0), lisht(dtype(0)))
+
+  def testLishtValue(self):
+        val = lisht(1e3)
+        self.assertAllClose(val, 1e3, check_dtypes=False, atol=1e-3)
+
+  def testLishtValueNeg(self):
+        val = lisht(-1e3)
+        self.assertAllClose(val, -1e3, check_dtypes=False, atol=1e-3)
+
+  def testLishtValueNan(self):
+        val = lisht(float('nan'))
+        self.assertTrue(jnp.isnan(val))
+
+    @parameterized.parameters([float] + jax.test_util.dtypes.floating)
+    def testLishtDtypeMatchesInput(self, dtype):
+        x = jnp.zeros((), dtype=dtype)
+        out = lisht(x)
+        self.assertEqual(out.dtype, dtype)
+
+    def testLishtArray(self):
+        x = jnp.linspace(-5, 5, 10)
+        y = lisht(x)
+        self.assertEqual(x.shape, y.shape)
+
+    def testLishtGradArray(self):
+        x = jnp.linspace(-5, 5, 10)
+        check_grads(lisht, (x,), order=2)
 
   def testReluGrad(self):
     rtol = 1e-2 if jtu.test_device_matches(["tpu"]) else None
